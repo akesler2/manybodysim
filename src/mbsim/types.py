@@ -6,10 +6,12 @@ integrators, and simulation orchestration modules.
 
 from __future__ import annotations
 
-from typing import Callable, Protocol, TypeAlias
+from typing import Callable, Protocol, TypeAlias, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
+if TYPE_CHECKING:
+    from mbsim.config import GeneratorConfig
 
 # Generic floating numpy array type used throughout the package.
 FloatArray: TypeAlias = NDArray[np.floating]
@@ -27,6 +29,12 @@ Masses: TypeAlias = FloatArray
 # Output: accelerations with shape (n, 2)
 AccelerationFn: TypeAlias = Callable[[Mat2, Mat2, Masses, float], Mat2]
 
+# Particle generator function contract for array-based simulation.
+# Input: number of particles, might requite additional inputs
+# Output: positions and velocities with shape (n, 2), and masses with shape (n,)
+ParticleGeneratorFn: TypeAlias = Callable[
+    [int, 'GeneratorConfig'], tuple[Mat2, Mat2, Masses]
+]
 
 class Integrator(Protocol):
     """Protocol for pluggable time integrators."""
@@ -41,3 +49,4 @@ class Integrator(Protocol):
         accel_fn: AccelerationFn,
     ) -> tuple[Mat2, Mat2]:
         """Advance one timestep and return (positions, velocities)."""
+
