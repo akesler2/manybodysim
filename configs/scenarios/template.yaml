@@ -1,0 +1,17 @@
+# Scenario overrides for a specific run.
+# Only include values that differ from configs/base.yaml.
+
+run:
+  n_particles: 250
+  t_end: 15.0
+
+generator:
+  v_mean: 8.0
+  v_std: 3.0
+
+numerics:
+  dt: 0.005
+  integrator: euler
+
+physics:
+  accel_model: none
