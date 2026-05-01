@@ -7,27 +7,29 @@ from mbsim.integrators.integrators import step_euler
 from mbsim.simulation.engine import advance_universe
 from mbsim.state.particles import random_particle_gen
 from mbsim.state.universe import Universe
-from mbsim.config import cfg, SimulatorConfig
+from mbsim.config import (
+    default_particle_init,
+    NumericsConfig,
+    PhysicsConfig,
+    SimulatorConfig,
+    WorldConfig,
+)
 from mbsim.types import ParticleGeneratorFn, Mat2
 
 
 
-sim_cfg = SimulatorConfig(
-    width = 100,
-    height = 100,
-    t_end = 10.0,
-    dt = .01,
-    n_particles = 2,
-    generator = cfg,
-    integrator = step_euler,
-    accel_fn = no_accel,
+default_sim_config = SimulatorConfig(
+    world=WorldConfig(width=100, height=100, n_particles=2, t_end=10.0),
+    numerics=NumericsConfig(dt=0.01, integrator=step_euler),
+    particle_init=default_particle_init,
+    physics=PhysicsConfig(accel_fn=no_accel),
 )
 
 
-def initial_universe(particle_gen: ParticleGeneratorFn, sim_cfg):
-    # Constructs an initial universe from chosen ParticleGeneratorFn and sim_cfg
-    particles = particle_gen(sim_cfg.n_particles, sim_cfg.generator)
-    return Universe(particles, sim_cfg.width, sim_cfg.height)
+def initial_universe(particle_gen: ParticleGeneratorFn, sim_config):
+    # Constructs an initial universe from chosen ParticleGeneratorFn and sim_config
+    particles = particle_gen(sim_config.n_particles, sim_config.particle_init)
+    return Universe(particles, sim_config.width, sim_config.height)
 
 
 class Result:
@@ -60,17 +62,24 @@ class Result:
         self.velocities_history.append(vel)
 
 
-def run(sim_cfg):
+def run(sim_config):
     # calls initial_universe to construct initial conditions
     # loops steps through times using advance universe
     # returns a result object
-    universe = initial_universe(random_particle_gen,sim_cfg)
+    universe = initial_universe(random_particle_gen, sim_config)
 
-    times = np.arange(0.0, sim_cfg.t_end, sim_cfg.dt)
+    times = np.arange(0.0, sim_config.t_end, sim_config.dt)
     sim_result = Result(times, universe)
 
     for t in times:
-        universe =  advance_universe(universe, sim_cfg.accel_fn, sim_cfg.integrator, t, sim_cfg.dt)
+        universe = advance_universe(
+            universe,
+            sim_config.accel_fn,
+            sim_config.integrator,
+            t,
+            sim_config.dt,
+            sim_config.boundaries,
+        )
         sim_result.append_positions(universe.positions.copy())
         sim_result.append_velocities(universe.velocities.copy())
 

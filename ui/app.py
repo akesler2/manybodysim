@@ -7,7 +7,7 @@ import time
 import streamlit as st
 
 from mbsim.analysis.metrics import kinetic_energy_timeseries
-from mbsim.simulation.runner import run, sim_cfg
+from mbsim.simulation.runner import default_sim_config, run
 from mbsim.ui.actions import render_action_buttons
 from mbsim.ui.controls import build_simulator_config
 from mbsim.ui.state import init_ui_state
@@ -30,7 +30,7 @@ def main() -> None:
 
     with control_col:
         st.markdown("#### Controls")
-        cfg = build_simulator_config(sim_cfg, container=st)
+        sim_config = build_simulator_config(default_sim_config, container=st)
         st.markdown("#### Actions")
         run_clicked, reset_clicked = render_action_buttons(container=st)
         panel_width = st.slider(
@@ -55,7 +55,7 @@ def main() -> None:
 
     # Run executes the simulation with current controls and stores result in session state.
     if run_clicked:
-        st.session_state.sim_result = run(cfg)
+        st.session_state.sim_result = run(sim_config)
         st.session_state.frame_idx = 0
         st.session_state.is_playing = False
 
@@ -103,8 +103,8 @@ def main() -> None:
         if display_mode in ("Both panels", "Simulation only"):
             scene_fig = draw_particle_frame(
                 result.positions_history[frame],
-                width=cfg.width,
-                height=cfg.height,
+                width=sim_config.width,
+                height=sim_config.height,
                 fig_width=6.2,
             )
         if display_mode in ("Both panels", "Energy only"):

@@ -11,7 +11,7 @@ from typing import Callable, Protocol, TypeAlias, TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 if TYPE_CHECKING:
-    from mbsim.config import GeneratorConfig
+    from mbsim.config import ParticleInitConfig
 
 # Generic floating numpy array type used throughout the package.
 FloatArray: TypeAlias = NDArray[np.floating]
@@ -33,7 +33,7 @@ AccelerationFn: TypeAlias = Callable[[Mat2, Mat2, Masses, float], Mat2]
 # Input: number of particles, might requite additional inputs
 # Output: positions and velocities with shape (n, 2), and masses with shape (n,)
 ParticleGeneratorFn: TypeAlias = Callable[
-    [int, 'GeneratorConfig'], tuple[Mat2, Mat2, Masses]
+    [int, "ParticleInitConfig"], tuple[Mat2, Mat2, Masses]
 ]
 
 class Integrator(Protocol):

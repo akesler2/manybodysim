@@ -20,7 +20,7 @@ Prioritized checklist for simulation and UI performance. Check items off as you 
 
 ### [ ] Cache diagnostics in the UI (e.g. kinetic energy series)
 
-- **What:** After `run(cfg)`, compute `kinetic_energy_timeseries` once and store in `st.session_state` keyed by result (or a run id); reuse on slider/playback reruns.
+- **What:** After `run(sim_config)`, compute `kinetic_energy_timeseries` once and store in `st.session_state` keyed by result (or a run id); reuse on slider/playback reruns.
 - **Benefit:** Fewer NumPy passes and less work on every Streamlit rerun.
 - **Reasoning:** Streamlit reruns the script often; recomputing the same time series from full velocity history is wasted CPU.
 
@@ -58,7 +58,7 @@ Prioritized checklist for simulation and UI performance. Check items off as you 
 
 ### [ ] Ensure simulation does not rerun on frame-only changes
 
-- **What:** After a successful `run`, only playback controls and plotting should rerun; do not call `run(cfg)` unless Run is clicked or params meaningfully change.
+- **What:** After a successful `run`, only playback controls and plotting should rerun; do not call `run(sim_config)` unless Run is clicked or params meaningfully change.
 - **Benefit:** Large reduction in wall-clock time during scrubbing and play.
 - **Reasoning:** Simulation is orders of magnitude more expensive than updating a matplotlib frame from cached arrays.
 

@@ -1,12 +1,11 @@
 world:
   width: 100.0
   height: 100.0
-
-run:
   n_particles: 100
   t_end: 10.0
+  boundaries: reflective
 
-generator:
+particle_init:
   mass: 1.0
   v_mean: 10.0
   v_std: 10.0

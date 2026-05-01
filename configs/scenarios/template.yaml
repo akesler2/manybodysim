@@ -1,11 +1,11 @@
 # Scenario overrides for a specific run.
 # Only include values that differ from configs/base.yaml.
 
-run:
+world:
   n_particles: 250
   t_end: 15.0
 
-generator:
+particle_init:
   v_mean: 8.0
   v_std: 3.0
 
