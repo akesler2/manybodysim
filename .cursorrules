@@ -1,0 +1,18 @@
+Markdown
+# Project Rules & Standards
+
+## Environment
+- **Language:** Always use Python 3.
+- **Environment:** Use the virtual environment located in the `./venv` directory.
+- **Package Management:** Use `pip`. When suggesting library installations, provide the command: `pip install <library>`.
+
+## Terminal Commands
+- When generating commands to run scripts, always prefix with the venv path:
+  - Mac/Linux: `./venv/bin/python main.py`
+  - Windows: `.\venv\Scripts\python main.py`
+- For Streamlit: `streamlit run main.py` (assuming the venv is activated).
+
+## Coding Style
+- Keep functions modular and small.
+- Use type hints wherever possible for clarity.
+- Prioritize clean, readable code over complex "clever" logic.
