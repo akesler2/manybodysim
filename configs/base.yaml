@@ -16,4 +16,18 @@ numerics:
   integrator: euler
 
 physics:
-  accel_model: none
+  force_model: none
+
+# Universal / shared constants for force models (override subset as needed).
+physical_constants:
+  gravitational_constant: 6.67430e-11
+  coulomb_constant: 8.9875517923e9
+  earth_mass: 5.972e24
+  earth_radius: 6.371e6
+  earth_gravity: 9.80665
+  # uniform_accel: F_i = m_i * a; default a = (0, -earth_gravity). Override:
+  # uniform_accel_x: 0.0
+  # uniform_accel_y: null   # null uses -earth_gravity
+  # uniform_force: same (fx, fy) on every particle (SI N):
+  # uniform_force_fx: 0.0
+  # uniform_force_fy: 0.0

@@ -2,12 +2,13 @@
 
 
 import numpy as np
-from mbsim.forces.accel_fns import no_accel
+from mbsim.config_loader import make_accel_fn
 from mbsim.integrators.integrators import step_euler
 from mbsim.simulation.engine import advance_universe
 from mbsim.state.particles import random_particle_gen
 from mbsim.state.universe import Universe
 from mbsim.config import (
+    PhysicalConstantsConfig,
     default_particle_init,
     NumericsConfig,
     PhysicsConfig,
@@ -17,12 +18,14 @@ from mbsim.config import (
 from mbsim.types import ParticleGeneratorFn, Mat2
 
 
+_default_pc = PhysicalConstantsConfig()
 
 default_sim_config = SimulatorConfig(
     world=WorldConfig(width=100, height=100, n_particles=2, t_end=10.0),
     numerics=NumericsConfig(dt=0.01, integrator=step_euler),
     particle_init=default_particle_init,
-    physics=PhysicsConfig(accel_fn=no_accel),
+    physics=PhysicsConfig(accel_fn=make_accel_fn("none", _default_pc)),
+    physical_constants=_default_pc,
 )
 
 

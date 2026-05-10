@@ -11,3 +11,4 @@ def init_ui_state() -> None:
     st.session_state.setdefault("is_playing", False)
     st.session_state.setdefault("fps", 12)
     st.session_state.setdefault("sim_result", None)
+    st.session_state.setdefault("mbsim_force_model", "none")

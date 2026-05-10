@@ -14,4 +14,8 @@ numerics:
   integrator: euler
 
 physics:
-  accel_model: none
+  force_model: none
+
+# Example: dimensionless toy gravity (override defaults from base.yaml)
+# physical_constants:
+#   gravitational_constant: 1.0

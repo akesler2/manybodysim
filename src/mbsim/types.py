@@ -19,21 +19,24 @@ FloatArray: TypeAlias = NDArray[np.floating]
 # Shape intent (enforced by convention and runtime checks where needed):
 # - Vec2: (2,)
 # - Mat2: (n, 2)
-# - Masses: (n,)
+# - ScalarProperty: (n,) — one scalar per particle (mass, charge, decay timer, …)
 Vec2: TypeAlias = FloatArray
 Mat2: TypeAlias = FloatArray
-Masses: TypeAlias = FloatArray
+ScalarProperty: TypeAlias = FloatArray
 
 # Acceleration function contract for array-based simulation.
-# Input: positions, velocities, masses, current time
+# Input: positions, velocities, per-particle scalar props (e.g. mass), current time
 # Output: accelerations with shape (n, 2)
-AccelerationFn: TypeAlias = Callable[[Mat2, Mat2, Masses, float], Mat2]
+AccelerationFn: TypeAlias = Callable[[Mat2, Mat2, ScalarProperty, float], Mat2]
+
+# Force model: same call signature as AccelerationFn; returns net force (n, 2), not a.
+ForceModelFn: TypeAlias = Callable[[Mat2, Mat2, ScalarProperty, float], Mat2]
 
 # Particle generator function contract for array-based simulation.
 # Input: number of particles, might requite additional inputs
-# Output: positions and velocities with shape (n, 2), and masses with shape (n,)
+# Output: positions and velocities with shape (n, 2), and per-particle scalars (n,)
 ParticleGeneratorFn: TypeAlias = Callable[
-    [int, "ParticleInitConfig"], tuple[Mat2, Mat2, Masses]
+    [int, "ParticleInitConfig"], tuple[Mat2, Mat2, ScalarProperty]
 ]
 
 class Integrator(Protocol):
@@ -43,7 +46,7 @@ class Integrator(Protocol):
         self,
         positions: Mat2,
         velocities: Mat2,
-        masses: Masses,
+        masses: ScalarProperty,
         t: float,
         dt: float,
         accel_fn: AccelerationFn,

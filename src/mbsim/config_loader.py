@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -11,20 +11,42 @@ from mbsim.config import (
     BoundaryMode,
     ParticleInitConfig,
     NumericsConfig,
+    PhysicalConstantsConfig,
     PhysicsConfig,
     SimulatorConfig,
     WorldConfig,
+    physical_constants_from_mapping,
 )
-from mbsim.forces.accel_fns import no_accel
+from mbsim.forces.accel import accel_from_forces
+from mbsim.forces.force_models import no_force, uniform_acceleration, uniform_force
 from mbsim.integrators.integrators import step_euler
+from mbsim.types import AccelerationFn, ForceModelFn
 
 INTEGRATOR_REGISTRY = {
     "euler": step_euler,
 }
 
-ACCEL_REGISTRY = {
-    "none": no_accel,
+# Maps YAML ``physics.force_model`` names to factories that build a ``ForceModelFn``
+# given merged ``PhysicalConstantsConfig`` (so models can read G, g, etc.).
+ForceModelFactory = Callable[[PhysicalConstantsConfig], ForceModelFn]
+
+FORCE_MODEL_REGISTRY: dict[str, ForceModelFactory] = {
+    "none": lambda _pc: no_force,
+    "uniform_accel": uniform_acceleration,
+    "uniform_force": uniform_force,
+    # Deprecated alias (same as uniform_accel)
+    "constant": uniform_acceleration,
 }
+
+
+def make_accel_fn(force_name: str, physical_constants: PhysicalConstantsConfig) -> AccelerationFn:
+    """Resolve registry name + constants into the integrator's acceleration callable."""
+    key = force_name.lower()
+    if key not in FORCE_MODEL_REGISTRY:
+        valid = ", ".join(sorted(FORCE_MODEL_REGISTRY))
+        raise ValueError(f"Unknown physics.force_model '{force_name}'. Valid: {valid}")
+    model_fn = FORCE_MODEL_REGISTRY[key](physical_constants)
+    return accel_from_forces([model_fn])
 
 BOUNDARY_REGISTRY: dict[str, BoundaryMode] = {
     "reflective": BoundaryMode.REFLECTIVE,
@@ -84,16 +106,19 @@ def simulation_config_from_dict(data: dict[str, Any]) -> SimulatorConfig:
         raise ValueError("numerics.dt must be > 0.")
 
     integrator_name = str(numerics["integrator"]).lower()
-    accel_name = str(physics["accel_model"]).lower()
+    force_raw = physics.get("force_model", physics.get("accel_model"))
+    if force_raw is None:
+        raise ValueError("physics must include 'force_model' (or legacy 'accel_model').")
+    force_name = str(force_raw).lower()
     boundary_raw = world.get("boundaries", "reflective")
     boundary_name = str(boundary_raw).lower()
 
     if integrator_name not in INTEGRATOR_REGISTRY:
         valid = ", ".join(sorted(INTEGRATOR_REGISTRY))
         raise ValueError(f"Unknown numerics.integrator '{integrator_name}'. Valid: {valid}")
-    if accel_name not in ACCEL_REGISTRY:
-        valid = ", ".join(sorted(ACCEL_REGISTRY))
-        raise ValueError(f"Unknown physics.accel_model '{accel_name}'. Valid: {valid}")
+    if force_name not in FORCE_MODEL_REGISTRY:
+        valid = ", ".join(sorted(FORCE_MODEL_REGISTRY))
+        raise ValueError(f"Unknown physics.force_model '{force_name}'. Valid: {valid}")
     if boundary_name not in BOUNDARY_REGISTRY:
         valid = ", ".join(sorted(BOUNDARY_REGISTRY))
         raise ValueError(f"Unknown world.boundaries '{boundary_name}'. Valid: {valid}")
@@ -111,6 +136,11 @@ def simulation_config_from_dict(data: dict[str, Any]) -> SimulatorConfig:
         seed=int(particle_init_data["seed"]) if particle_init_data.get("seed") is not None else None,
     )
 
+    pc_raw = data.get("physical_constants")
+    if pc_raw is not None and not isinstance(pc_raw, dict):
+        raise ValueError("physical_constants must be a mapping/object when provided.")
+    physical_constants = physical_constants_from_mapping(pc_raw)
+
     return SimulatorConfig(
         world=WorldConfig(
             width=width,
@@ -121,7 +151,8 @@ def simulation_config_from_dict(data: dict[str, Any]) -> SimulatorConfig:
         ),
         numerics=NumericsConfig(dt=dt, integrator=INTEGRATOR_REGISTRY[integrator_name]),
         particle_init=particle_init,
-        physics=PhysicsConfig(accel_fn=ACCEL_REGISTRY[accel_name]),
+        physics=PhysicsConfig(accel_fn=make_accel_fn(force_name, physical_constants)),
+        physical_constants=physical_constants,
     )
 
 
